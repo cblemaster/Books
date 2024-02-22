@@ -5,49 +5,34 @@ namespace Books.API.Mappers
 {
     public static class EntitiesToDTOs
     {
-        public static ReadAuthor MapAuthorEntityToReadAuthorDTO(Author author)
-        {
-            if (author is null)
-            {
-                return ReadAuthor.NotFound;
-            }
-            return new ReadAuthor()
-            {
-                AuthorId = author.AuthorId,
-                AuthorName = author.AuthorName,
-            };
-        }
-        
-        public static ReadBook MapBookEntityToReadBookDTO(Book book)
-        {
-            if (book is null)
-            {
-                return ReadBook.NotFound;
-            }
-            return new ReadBook()
-            {
-                BookId = book.BookId,
-                Title = book.Title,
-                AuthorId = book.AuthorId,
-                Author = MapAuthorEntityToReadAuthorDTO(book.Author),
-                PageCount = book.PageCount,
-                PublicationYear = book.PublicationYear,
-                Genres = MapCollectionOfGenreEntitiesToCollectionOfReadGenreDTO(book.Genres),
-            };
-        }
+        public static ReadAuthor MapAuthorEntityToReadAuthorDTO(Author author) => author is null
+                ? ReadAuthor.NotFound
+                : new ReadAuthor()
+                {
+                    AuthorId = author.AuthorId,
+                    AuthorName = author.AuthorName,
+                };
 
-        public static ReadGenre MapGenreEntityToReadGenreDTO(Genre genre)
-        {
-            if (genre is null)
-            {
-                return ReadGenre.NotFound;
-            }
-            return new ReadGenre()
-            {
-                GenreId = genre.GenreId,
-                GenreName = genre.GenreName,
-            };
-        }
+        public static ReadBook MapBookEntityToReadBookDTO(Book book) => book is null
+                ? ReadBook.NotFound
+                : new ReadBook()
+                {
+                    BookId = book.BookId,
+                    Title = book.Title,
+                    AuthorId = book.AuthorId,
+                    Author = MapAuthorEntityToReadAuthorDTO(book.Author),
+                    PageCount = book.PageCount,
+                    PublicationYear = book.PublicationYear,
+                    Genres = MapCollectionOfGenreEntitiesToCollectionOfReadGenreDTO(book.Genres),
+                };
+
+        public static ReadGenre MapGenreEntityToReadGenreDTO(Genre genre) => genre is null
+                ? ReadGenre.NotFound
+                : new ReadGenre()
+                {
+                    GenreId = genre.GenreId,
+                    GenreName = genre.GenreName,
+                };
 
         public static IEnumerable<ReadAuthor> MapCollectionOfAuthorEntitiesToCollectionOfReadAuthorDTO(IEnumerable<Author> authors)
         {

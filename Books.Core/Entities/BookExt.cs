@@ -15,17 +15,8 @@
 
         public static IEnumerable<Book> CollectionNotFound => Enumerable.Empty<Book>();
 
-        public (bool IsValid, string ErrorEmssage) Validate()
-        {
-            if (Title.Length < 1 || Title.Length > 50)
-            {
-                return (false, "Book title is required and must be 50 characters or fewer.");
-            }
-            if (AuthorId < 1 || Author is null)
-            {
-                return (false, "Invalid author.");
-            }
-            return (true, string.Empty);
-        }
+        public (bool IsValid, string ErrorEmssage) Validate() => Title.Length < 1 || Title.Length > 50
+                ? ((bool IsValid, string ErrorEmssage))(false, "Book title is required and must be 50 characters or fewer.")
+                : AuthorId < 1 || Author is null ? ((bool IsValid, string ErrorEmssage))(false, "Invalid author.") : ((bool IsValid, string ErrorEmssage))(true, string.Empty);
     }
 }
