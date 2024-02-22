@@ -1,3 +1,5 @@
+﻿using Books.Core.GuardClauses;
+
 namespace Books.API.DTOs
 {
     public class CreateBook
@@ -8,8 +10,13 @@ namespace Books.API.DTOs
         public int? PublicationYear { get; init; }
         public required ICollection<ReadGenre> Genres { get; init; }
 
-        public (bool IsValid, string ErrorEmssage) Validate() => Title.Length < 1 || Title.Length > 50
-                ? (false, "Book title is required and must be 50 characters or fewer.")
-                : AuthorId < 1 ? (false, "Invalid author.") : (true, string.Empty);
+        public (bool IsValid, string ErrorMessage) Validate()
+        {
+            (bool IsValid, string ErrorMessage) = GuardClauses.StringLengthIsValid(1, 50, "Book title is required and must be 50 characters or fewer.", Title);
+            if (!IsValid) { return (IsValid, ErrorMessage); }
+
+            (IsValid, ErrorMessage) = GuardClauses.IdIsGreaterThanZero(AuthorId, "Invalid author.");
+            return (IsValid, ErrorMessage);
+        }
     }
 }

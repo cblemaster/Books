@@ -11,9 +11,7 @@
 
         public static IEnumerable<Author> CollectionNotFound => Enumerable.Empty<Author>();
 
-        public (bool IsValid, string ErrorEmssage) Validate() =>
-            AuthorName.Length is > 0 and <= 50
-                ? (true, string.Empty)
-                : (false, "Author name is required and must be 50 characters or fewer.");
+        public (bool IsValid, string ErrorMessage) Validate() =>
+            GuardClauses.GuardClauses.StringLengthIsValid(1, 50, "Author name is required and must be 50 characters or fewer.", AuthorName);
     }
 }

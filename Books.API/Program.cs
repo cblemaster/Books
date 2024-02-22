@@ -2,6 +2,7 @@ using Books.API.Context;
 using Books.API.DTOs;
 using Books.API.Mappers;
 using Books.Core.Entities;
+using Books.Core.GuardClauses;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,7 +23,7 @@ app.MapGet("/", () => "Hello World!");
 
 app.MapGet("/author/{authorId:int}", async Task<Results<BadRequest<string>, Ok<ReadAuthor>, NotFound<string>>> (BooksContext context, int authorId) =>
 {
-    if (authorId < 1)
+    if (!GuardClauses.IdIsGreaterThanZero(authorId, "Invalid author id.").IsValid)
     {
         return TypedResults.BadRequest("Invalid author id.");
     }
@@ -44,7 +45,7 @@ app.MapGet("/author", Results<Ok<IEnumerable<ReadAuthor>>, NotFound<string>> (Bo
 
 app.MapGet("/book/{bookId:int}", async Task<Results<BadRequest<string>, Ok<ReadBook>, NotFound<string>>> (BooksContext context, int bookId) =>
 {
-    if (bookId < 1)
+    if (!GuardClauses.IdIsGreaterThanZero(bookId, "Invalid book id.").IsValid)
     {
         return TypedResults.BadRequest("Invalid book id.");
     }
@@ -66,7 +67,7 @@ app.MapGet("/book", Results<Ok<IEnumerable<ReadBook>>, NotFound<string>> (BooksC
 
 app.MapGet("/genre/{genreId:int}", async Task<Results<BadRequest<string>, Ok<ReadGenre>, NotFound<string>>> (BooksContext context, int genreId) =>
 {
-    if (genreId < 1)
+    if (!GuardClauses.IdIsGreaterThanZero(genreId, "Invalid genre id.").IsValid)
     {
         return TypedResults.BadRequest("Invalid genre id.");
     }
@@ -96,7 +97,7 @@ app.MapPost("/genre", (BooksContext context, CreateGenre createGenre) => { });
 
 app.MapDelete("/author/{authorId:int}", async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> (BooksContext context, int authorId) =>
 {
-    if (authorId < 1)
+    if (!GuardClauses.IdIsGreaterThanZero(authorId, "Invalid author id.").IsValid)
     {
         return TypedResults.BadRequest("Invalid author id.");
     }
@@ -116,7 +117,7 @@ app.MapDelete("/author/{authorId:int}", async Task<Results<BadRequest<string>, N
 
 app.MapDelete("/book/{bookId:int}", async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> (BooksContext context, int bookId) =>
 {
-    if (bookId < 1)
+    if (!GuardClauses.IdIsGreaterThanZero(bookId, "Invalid book id.").IsValid)
     {
         return TypedResults.BadRequest("Invalid book id.");
     }
@@ -136,7 +137,7 @@ app.MapDelete("/book/{bookId:int}", async Task<Results<BadRequest<string>, NoCon
 
 app.MapDelete("/genre/{genreId:int}", async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> (BooksContext context, int genreId) =>
 {
-    if (genreId < 1)
+    if (!GuardClauses.IdIsGreaterThanZero(genreId, "Invalid genre id.").IsValid)
     {
         return TypedResults.BadRequest("Invalid genre id.");
     }
