@@ -94,8 +94,64 @@ app.MapPost("/author", (BooksContext context, CreateAuthor createAuthor) => { })
 app.MapPost("/book", (BooksContext context, CreateBook createBook) => { });
 app.MapPost("/genre", (BooksContext context, CreateGenre createGenre) => { });
 
-app.MapDelete("/author/{authorId:int}", (BooksContext context, int authorId) => { });
-app.MapDelete("/book/{bookId:int}", (BooksContext context, int bookId) => { });
-app.MapDelete("/genre/{genreId:int}", (BooksContext context, int genreId) => { });
+app.MapDelete("/author/{authorId:int}", async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> (BooksContext context, int authorId) =>
+{
+    if (authorId < 1)
+    {
+        return TypedResults.BadRequest("Invalid author id.");
+    }
+    if (await context.Authors.Include(a => a.Books).SingleOrDefaultAsync(a => a.AuthorId == authorId) is Author author)
+    {
+        if (author.Books.Any())
+        {
+            return TypedResults.BadRequest("Unable to delete author because the author is associated with one or more books. Remove the author from any books it is associated with before deleting the author.");
+        }
+        
+        context.Authors.Remove(author);
+        await context.SaveChangesAsync();
+        return TypedResults.NoContent();
+    }
+    return TypedResults.NotFound("Unable to find author to delete.");
+});
+
+app.MapDelete("/book/{bookId:int}", async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> (BooksContext context, int bookId) =>
+{
+    if (bookId < 1)
+    {
+        return TypedResults.BadRequest("Invalid book id.");
+    }
+    if (await context.Books.Include(b => b.Genres).SingleOrDefaultAsync(b => b.BookId == bookId) is Book book)
+    {
+        if (book.Genres.Any())
+        {
+            return TypedResults.BadRequest("Unable to delete book because it is associated with one or more genres. Remove the genres from the book before deleting.");
+        }
+        
+        context.Books.Remove(book);
+        await context.SaveChangesAsync();
+        return TypedResults.NoContent();
+    }
+    return TypedResults.NotFound("Unable to find book to delete.");
+});
+
+app.MapDelete("/genre/{genreId:int}", async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> (BooksContext context, int genreId) =>
+{
+    if (genreId < 1)
+    {
+        return TypedResults.BadRequest("Invalid genre id.");
+    }
+    if (await context.Genres.Include(g => g.Books).SingleOrDefaultAsync(g => g.GenreId == genreId) is Genre genre)
+    {
+        if (genre.Books.Any())
+        {
+            return TypedResults.BadRequest("Unable to delete genre because it is associated with one or more books. Remove the genre from any books it is associated with before deleting the genre.");
+        }
+        
+        context.Genres.Remove(genre);
+        await context.SaveChangesAsync();
+        return TypedResults.NoContent();
+    }
+    return TypedResults.NotFound("Unable to find genre to delete.");
+});
 
 app.Run();
