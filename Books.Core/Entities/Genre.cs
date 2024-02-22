@@ -1,4 +1,4 @@
-﻿namespace Books.API.Models;
+﻿namespace Books.Core.Entities;
 
 public partial class Genre
 {
