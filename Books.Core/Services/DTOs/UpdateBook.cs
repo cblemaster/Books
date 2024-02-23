@@ -1,7 +1,5 @@
-﻿using Books.Core.GuardClauses;
-
-namespace Books.Core.Services.DTOs
-{ 
+﻿namespace Books.Core.Services.DTOs
+{
     public class UpdateBook
     {
         public required int BookId { get; init; }

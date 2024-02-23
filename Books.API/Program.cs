@@ -61,7 +61,7 @@ app.MapPut("/author/{authorId:int}", async Task<Results<BadRequest<string>, NotF
 {
     (bool IsValid, string ErrorMessage) = GuardClauses.IdIsGreaterThanZero(authorId, "Invalid author id.");
     if (!IsValid || authorId != updateAuthor.AuthorId) { return TypedResults.BadRequest("Invalid author id."); }
-    
+
     (IsValid, ErrorMessage) = updateAuthor.Validate();
     if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
 
@@ -85,10 +85,10 @@ app.MapPut("/book/{bookId:int}", async Task<Results<BadRequest<string>, NotFound
     if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
 
     Book bookToUpdate = await context.Books.Include(b => b.Genres).SingleOrDefaultAsync(b => b.BookId == bookId) ?? Book.NotFound;
-    
+
     (IsValid, ErrorMessage) = GuardClauses.IdIsGreaterThanZero(bookToUpdate.BookId, "Book to update not found.");
     if (!IsValid) { return TypedResults.NotFound(ErrorMessage); }
-    
+
     bookToUpdate = DTOsToEntities.MapUpdateBookDTOToBookEntity(updateBook, bookToUpdate);
     bookToUpdate.Genres.Clear();
     await context.SaveChangesAsync();
@@ -102,13 +102,13 @@ app.MapPut("/book/{bookId:int}", async Task<Results<BadRequest<string>, NotFound
     foreach (ReadGenre genre in updateBook.Genres)
     {
         Genre genreToAddToNavigation = await context.Genres.SingleOrDefaultAsync(g => g.GenreId == genre.GenreId) ?? Genre.NotFound;
-        
+
         (IsValid, ErrorMessage) = GuardClauses.IdIsGreaterThanZero(genreToAddToNavigation.GenreId, "Genre to add to book not found.");
         if (!IsValid) { return TypedResults.NotFound(ErrorMessage); }
 
         bookToUpdate.Genres.Add(genreToAddToNavigation);
     }
-    
+
     await context.SaveChangesAsync();
 
     return TypedResults.NoContent();
@@ -141,7 +141,7 @@ app.MapPut("/genre/{genreId:int}", async Task<Results<BadRequest<string>, NotFou
 app.MapPost("/author", async Task<Results<BadRequest<string>, Created<ReadAuthor>>> (BooksContext context, CreateAuthor createAuthor) =>
 {
     (bool IsValid, string ErrorMessage) = createAuthor.Validate();
-    
+
     if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
 
     Author authorToAdd = DTOsToEntities.MapCreateAuthorDTOToAuthorEntity(createAuthor);

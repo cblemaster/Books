@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Books.Core.Services.HttpService
 {
-    public class HttpService: IHttpService
+    public class HttpService : IHttpService
     {
         private readonly HttpClient _client;
         private const string BASE_URI = "https://localhost:7048";

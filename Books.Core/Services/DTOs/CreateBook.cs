@@ -1,6 +1,4 @@
-﻿using Books.Core.GuardClauses;
-
-namespace Books.Core.Services.DTOs
+﻿namespace Books.Core.Services.DTOs
 {
     public class CreateBook
     {
