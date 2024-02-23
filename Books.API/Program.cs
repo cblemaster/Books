@@ -61,9 +61,56 @@ app.MapPut("/author/{authorId:int}", (BooksContext context, int authorId, Update
 app.MapPut("/book/{bookId:int}", (BooksContext context, int bookId, UpdateBook updateBook) => { });
 app.MapPut("/genre/{genreId:int}", (BooksContext context, int genreId, UpdateGenre updateGenre) => { });
 
-app.MapPost("/author", (BooksContext context, CreateAuthor createAuthor) => { });
-app.MapPost("/book", (BooksContext context, CreateBook createBook) => { });
-app.MapPost("/genre", (BooksContext context, CreateGenre createGenre) => { });
+app.MapPost("/author", async Task<Results<BadRequest<string>, Created<ReadAuthor>>> (BooksContext context, CreateAuthor createAuthor) =>
+{
+    (bool IsValid, string ErrorMessage) = createAuthor.Validate();
+    
+    if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
+
+    Author authorToAdd = DTOsToEntities.MapCreateAuthorDTOToAuthorEntity(createAuthor);
+    context.Authors.Add(authorToAdd);
+    await context.SaveChangesAsync();
+
+    return TypedResults.Created($"/author/{authorToAdd.AuthorId}", EntitiesToDTOs.MapAuthorEntityToReadAuthorDTO(await context.Authors.SingleOrDefaultAsync(a => a.AuthorId == authorToAdd.AuthorId) ?? Author.NotFound));
+});
+
+app.MapPost("/book", async Task<Results<BadRequest<string>, Created<ReadBook>>> (BooksContext context, CreateBook createBook) =>
+{
+    (bool IsValid, string ErrorMessage) = createBook.Validate();
+
+    if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
+
+    Book bookToAdd = DTOsToEntities.MapCreateBookDTOToBookEntity(createBook);
+
+    foreach (Genre genre in bookToAdd.Genres)
+    {
+        context.Genres.Entry(genre).State = EntityState.Unchanged;
+    }
+
+    context.Books.Add(bookToAdd);
+    await context.SaveChangesAsync();
+
+    return TypedResults.Created($"/book/{bookToAdd.BookId}", EntitiesToDTOs.MapBookEntityToReadBookDTO(await context.Books.Include(b => b.Author).SingleOrDefaultAsync(b => b.BookId == bookToAdd.BookId) ?? Book.NotFound));
+});
+
+app.MapPost("/genre", async Task<Results<BadRequest<string>, Created<ReadGenre>>> (BooksContext context, CreateGenre createGenre) =>
+{
+    (bool IsValid, string ErrorMessage) = createGenre.Validate();
+
+    if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
+
+    Genre? a = await context.Genres.SingleOrDefaultAsync(g => g.GenreName == createGenre.GenreName);
+    if (await context.Genres.SingleOrDefaultAsync(g => g.GenreName == createGenre.GenreName) is not null)
+    {
+        return TypedResults.BadRequest($"Genre name {createGenre.GenreName} already used.");
+    }
+
+    Genre genreToAdd = DTOsToEntities.MapCreateGenreDTOToGenreEntity(createGenre);
+    context.Genres.Add(genreToAdd);
+    await context.SaveChangesAsync();
+
+    return TypedResults.Created($"/genre/{genreToAdd.GenreId}", EntitiesToDTOs.MapGenreEntityToReadGenreDTO(await context.Genres.SingleOrDefaultAsync(g => g.GenreId == genreToAdd.GenreId) ?? Genre.NotFound));
+});
 
 app.MapDelete("/author/{authorId:int}", async Task<Results<BadRequest<string>, NoContent, NotFound<string>>> (BooksContext context, int authorId) =>
 {
