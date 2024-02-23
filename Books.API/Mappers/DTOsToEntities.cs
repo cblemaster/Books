@@ -30,33 +30,68 @@ namespace Books.API.Mappers
                     GenreName = createGenre.GenreName,
                 };
 
-        public static Author MapUpdateAuthorDTOToAuthorEntity(UpdateAuthor updateAuthor) => updateAuthor is null
-                ? Author.NotFound
-                : new Author()
+        public static Author MapUpdateAuthorDTOToAuthorEntity(UpdateAuthor updateAuthor, Author authorToUpdate)
+        {
+            if (updateAuthor is null || updateAuthor.AuthorId != authorToUpdate.AuthorId)
+            {
+                return authorToUpdate;
+            }
+            else
+            {
+                if (!authorToUpdate.AuthorName.Equals(updateAuthor.AuthorName, StringComparison.Ordinal))
                 {
-                    AuthorId = updateAuthor.AuthorId,
-                    AuthorName = updateAuthor.AuthorName,
-                };
+                    authorToUpdate.AuthorName = updateAuthor.AuthorName;
+                }
 
-        public static Book MapUpdateBookDTOToBookEntity(UpdateBook updateBook) => updateBook is null
-                ? Book.NotFound
-                : new Book()
-                {
-                    BookId = updateBook.BookId,
-                    Title = updateBook.Title,
-                    AuthorId = updateBook.AuthorId,
-                    PageCount = updateBook.PageCount,
-                    PublicationYear = updateBook.PublicationYear,
-                    Genres = MapCollectionOfReadGenreDTOToCollectionOfGenreEntities(updateBook.Genres).ToList(),
-                };
+                return authorToUpdate;
+            }
+        }
 
-        public static Genre MapUpdateGenreDTOToGenreEntity(UpdateGenre updateGenre) => updateGenre is null
-                ? Genre.NotFound
-                : new Genre()
+        public static Book MapUpdateBookDTOToBookEntity(UpdateBook updateBook, Book bookToUpdate)
+        {
+            if (updateBook is null || updateBook.BookId != bookToUpdate.BookId)
+            {
+                return bookToUpdate;
+            }
+            else
+            {
+                if (!bookToUpdate.Title.Equals(updateBook.Title, StringComparison.Ordinal))
                 {
-                    GenreId = updateGenre.GenreId,
-                    GenreName = updateGenre.GenreName,
-                };
+                    bookToUpdate.Title = updateBook.Title;
+                }
+                if (!bookToUpdate.AuthorId.Equals(updateBook.AuthorId))
+                {
+                    bookToUpdate.AuthorId = updateBook.AuthorId;
+                }
+                if (!bookToUpdate.PageCount.Equals(updateBook.PageCount))
+                {
+                    bookToUpdate.PageCount = updateBook.PageCount;
+                }
+                if (!bookToUpdate.PublicationYear.Equals(updateBook.PublicationYear))
+                {
+                    bookToUpdate.PublicationYear = updateBook.PublicationYear;
+                }
+
+                return bookToUpdate;
+            }
+        }
+
+        public static Genre MapUpdateGenreDTOToGenreEntity(UpdateGenre updateGenre, Genre genreToUpdate)
+        {
+            if (updateGenre is null || updateGenre.GenreId != genreToUpdate.GenreId)
+            {
+                return genreToUpdate;
+            }
+            else
+            {
+                if (!genreToUpdate.GenreName.Equals(updateGenre.GenreName, StringComparison.Ordinal))
+                {
+                    genreToUpdate.GenreName = updateGenre.GenreName;
+                }
+
+                return genreToUpdate;
+            }
+        }
 
         public static Genre MapReadGenreDTOToGenreEntity(ReadGenre genre) => genre is null
                 ? Genre.NotFound

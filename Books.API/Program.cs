@@ -57,9 +57,86 @@ app.MapGet("/genre", Results<Ok<IEnumerable<ReadGenre>>, NotFound<string>> (Book
         ? TypedResults.Ok(EntitiesToDTOs.MapCollectionOfGenreEntitiesToCollectionOfReadGenreDTO(genres))
         : TypedResults.NotFound("No genres found."));
 
-app.MapPut("/author/{authorId:int}", (BooksContext context, int authorId, UpdateAuthor updateAuthor) => { });
-app.MapPut("/book/{bookId:int}", (BooksContext context, int bookId, UpdateBook updateBook) => { });
-app.MapPut("/genre/{genreId:int}", (BooksContext context, int genreId, UpdateGenre updateGenre) => { });
+app.MapPut("/author/{authorId:int}", async Task<Results<BadRequest<string>, NotFound<string>, NoContent>> (BooksContext context, int authorId, UpdateAuthor updateAuthor) =>
+{
+    (bool IsValid, string ErrorMessage) = GuardClauses.IdIsGreaterThanZero(authorId, "Invalid author id.");
+    if (!IsValid || authorId != updateAuthor.AuthorId) { return TypedResults.BadRequest("Invalid author id."); }
+    
+    (IsValid, ErrorMessage) = updateAuthor.Validate();
+    if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
+
+    Author authorToUpdate = await context.Authors.SingleOrDefaultAsync(a => a.AuthorId == authorId) ?? Author.NotFound;
+    (IsValid, ErrorMessage) = GuardClauses.IdIsGreaterThanZero(authorToUpdate.AuthorId, "Author to update not found.");
+    if (!IsValid) { return TypedResults.NotFound(ErrorMessage); }
+
+    authorToUpdate = DTOsToEntities.MapUpdateAuthorDTOToAuthorEntity(updateAuthor, authorToUpdate);
+    context.Authors.Entry(authorToUpdate).State = EntityState.Modified;
+    await context.SaveChangesAsync();
+
+    return TypedResults.NoContent();
+});
+
+app.MapPut("/book/{bookId:int}", async Task<Results<BadRequest<string>, NotFound<string>, NoContent>> (BooksContext context, int bookId, UpdateBook updateBook) =>
+{
+    (bool IsValid, string ErrorMessage) = GuardClauses.IdIsGreaterThanZero(bookId, "Invalid book id.");
+    if (!IsValid || bookId != updateBook.BookId) { return TypedResults.BadRequest("Invalid book id."); }
+
+    (IsValid, ErrorMessage) = updateBook.Validate();
+    if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
+
+    Book bookToUpdate = await context.Books.Include(b => b.Genres).SingleOrDefaultAsync(b => b.BookId == bookId) ?? Book.NotFound;
+    
+    (IsValid, ErrorMessage) = GuardClauses.IdIsGreaterThanZero(bookToUpdate.BookId, "Book to update not found.");
+    if (!IsValid) { return TypedResults.NotFound(ErrorMessage); }
+    
+    bookToUpdate = DTOsToEntities.MapUpdateBookDTOToBookEntity(updateBook, bookToUpdate);
+    bookToUpdate.Genres.Clear();
+    await context.SaveChangesAsync();
+
+    /*  TODO: This is not ideal, but I also have not yet mastered many-to-many relationships in EF Core;
+              We just updated the entity w/ an empty navigation (since we cleared the navigation on line 94);
+              Now we will add the navigation prop elements back to the entity and save again - not very performant;
+              Get the navigation items on the update dto from the db before adding so that they are part of change tracking;
+    */
+
+    foreach (ReadGenre genre in updateBook.Genres)
+    {
+        Genre genreToAddToNavigation = await context.Genres.SingleOrDefaultAsync(g => g.GenreId == genre.GenreId) ?? Genre.NotFound;
+        
+        (IsValid, ErrorMessage) = GuardClauses.IdIsGreaterThanZero(genreToAddToNavigation.GenreId, "Genre to add to book not found.");
+        if (!IsValid) { return TypedResults.NotFound(ErrorMessage); }
+
+        bookToUpdate.Genres.Add(genreToAddToNavigation);
+    }
+    
+    await context.SaveChangesAsync();
+
+    return TypedResults.NoContent();
+});
+
+app.MapPut("/genre/{genreId:int}", async Task<Results<BadRequest<string>, NotFound<string>, NoContent>> (BooksContext context, int genreId, UpdateGenre updateGenre) =>
+{
+    (bool IsValid, string ErrorMessage) = GuardClauses.IdIsGreaterThanZero(genreId, "Invalid genre id.");
+    if (!IsValid || genreId != updateGenre.GenreId) { return TypedResults.BadRequest("Invalid genre id."); }
+
+    (IsValid, ErrorMessage) = updateGenre.Validate();
+    if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
+
+    Genre genreToUpdate = await context.Genres.SingleOrDefaultAsync(g => g.GenreId == genreId) ?? Genre.NotFound;
+    (IsValid, ErrorMessage) = GuardClauses.IdIsGreaterThanZero(genreToUpdate.GenreId, "Genre to update not found.");
+    if (!IsValid) { return TypedResults.NotFound(ErrorMessage); }
+
+    if (await context.Genres.SingleOrDefaultAsync(g => g.GenreName == updateGenre.GenreName && g.GenreId != updateGenre.GenreId) is not null)
+    {
+        return TypedResults.BadRequest($"Genre name {updateGenre.GenreName} already used.");
+    }
+
+    genreToUpdate = DTOsToEntities.MapUpdateGenreDTOToGenreEntity(updateGenre, genreToUpdate);
+    context.Genres.Entry(genreToUpdate).State = EntityState.Modified;
+    await context.SaveChangesAsync();
+
+    return TypedResults.NoContent();
+});
 
 app.MapPost("/author", async Task<Results<BadRequest<string>, Created<ReadAuthor>>> (BooksContext context, CreateAuthor createAuthor) =>
 {
@@ -99,7 +176,6 @@ app.MapPost("/genre", async Task<Results<BadRequest<string>, Created<ReadGenre>>
 
     if (!IsValid) { return TypedResults.BadRequest(ErrorMessage); }
 
-    Genre? a = await context.Genres.SingleOrDefaultAsync(g => g.GenreName == createGenre.GenreName);
     if (await context.Genres.SingleOrDefaultAsync(g => g.GenreName == createGenre.GenreName) is not null)
     {
         return TypedResults.BadRequest($"Genre name {createGenre.GenreName} already used.");
