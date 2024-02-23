@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace Books.Core.GuardClauses
+﻿namespace Books.Core.GuardClauses
 {
     public static class GuardClauses
     {
