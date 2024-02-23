@@ -36,5 +36,6 @@
 - Run the solution in Visual Studio
 
 ## Improvement opportunities:
+- Keep this up to date with the latest .NET LTS releases
 - Updating book entities can be handled better in the API; I have not yet mastered many-to-many relationships in EF
 - There is duplication of DTO classes between the API and the Core project; UI projects will need their own DTOs too; for now I think this duplication is better than sharing DTOs, say, from the Core project, as it allows for DTO customization per project
