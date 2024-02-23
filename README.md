@@ -7,7 +7,7 @@
 - .NET 8 / C# 12
 - SQL Server database
 - API: ASP.NET Core, minimal API, Entity Framework Core 8
-- UI: Empty projects for MAUI, Razor Pages, Signal R, Blazor, Angular, and WPF
+- UI: Empty projects for MAUI, Razor Pages, Signal R (Blazor Server app), Blazor Web App, Angular, and WPF
 - Programming techniques:
 	- Null object pattern
 	- Expression bodied members
